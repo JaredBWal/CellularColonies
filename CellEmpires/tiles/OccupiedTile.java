@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.util.concurrent.ThreadLocalRandom;
 
 abstract class OccupiedTile extends LandTile {
 
@@ -58,4 +59,22 @@ abstract class OccupiedTile extends LandTile {
 		}
 	}
 
+	/*
+	 * Takes in the parameters needed to create a new civCapital tile.
+	 * 
+	 * 
+	 */
+	public CivCapital convertToCivCapital(int xPos, int yPos, int tileWidth, int tileHeight, 
+			String type, int wood, int iron, int food, int pop, Color tileColor,
+			int xIndex, int yIndex, int civId) {
+		CivCapital civCap = new CivCapital(xPos, yPos, tileWidth, tileHeight, type, wood, iron, food, pop, tileColor);
+		civCap.setIndexs(xIndex, yIndex);
+		
+		// sets addition civCapital attributes
+		civCap.setTileId(civId, -1, -1);
+    	civCap.setPopLimit(ThreadLocalRandom.current().nextInt(130, 301));
+		
+		return civCap;
+		
+	}
 }

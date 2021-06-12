@@ -40,8 +40,11 @@ public class MainBoardGui  extends JPanel {
     
     
     
+    
+    
     Tile[][] boardList = new Tile[boardTileWidth][boardTileHeight];
     ArrayList<Tile> civList = new ArrayList<Tile>();
+    ArrayList<Tile> newCivList = new ArrayList<Tile>();
     
     ArrayList<LandTile> landTileList = new ArrayList<LandTile>();
     
@@ -212,12 +215,15 @@ public class MainBoardGui  extends JPanel {
     }
     
     public void tileTurns() {
-    	
+    	System.out.println("CIV TURN: " + civList);
     	// goes through each civ capital in array and takes its turn
     	for (Tile civ : civList) {
     		// casts the tile as a CivCapital
     		civCapitalTurn((CivCapital) civ);
+    		
     	}
+    	civList.addAll(newCivList);
+    	System.out.println("CIV TURN OVER\n");
 
     }
     
@@ -287,7 +293,8 @@ public class MainBoardGui  extends JPanel {
     
     public void civCapitalTurn(CivCapital capital) {
     	
-    	System.out.println("CivTurn: " + capital.getXIndex() + ", " + capital.getYIndex());
+    	System.out.println(String.format("\n"
+    			+ capital));
     	
     	// checks if capital is engaged
     	if(capital.isEngaged) {
@@ -332,14 +339,17 @@ public class MainBoardGui  extends JPanel {
     	
     	
     	//System.out.println(surroundingTiles);
-    	
+      	System.out.println("Surrounding Tiles:" + surroundingTiles);
+
     	// creates an ArrayList of tiles to expand to
       	ArrayList<LandTile> movableTiles = getMovableToTiles(capital, surroundingTiles);
-    
+      	System.out.println("Movable Tiles:" + movableTiles);
       	//checks if there are any movable tiles
       	if (movableTiles.size() > 0) {
           	// picks random tile to expand to
           	LandTile toExpandTo = getRandomMovableTile(movableTiles);
+          	
+          	
           	
           	// capital expands using new random neighbor tile
           	capitalExpandsWithTile(capital, toExpandTo);
@@ -347,19 +357,41 @@ public class MainBoardGui  extends JPanel {
      
     }
     
-    public void capitalExpandsWithTile(CapitalTile capTile, LandTile settleTile) {
+    public void capitalExpandsWithTile(CapitalTile capTile, LandTile setlTi) {
       	
       	// check if toExpandTo tile is occupied or not
-      	if (settleTile instanceof OccupiedTile) {
+      	if (setlTi instanceof OccupiedTile) {
       		// engagement
       		
       	}else {
       		//TODO check if tile should settle county of capital
+      		System.out.println("New CAPITAL CREATED");
+      		
+      		      		
+      		// TODO Make this so it doesnt create new Civ Capitals
+      		CivCapital newTile2 = new CivCapital(setlTi.xPos, setlTi.yPos, 
+      				setlTi.tileWidth, setlTi.tileHeight, setlTi.type,
+      				setlTi.wood, setlTi.iron, setlTi.food, capTile.pop,
+      				capTile.tileColor);
+      		
+      		
+      		newTile2.xIndex = setlTi.xIndex;
+      		newTile2.yIndex = setlTi.yIndex;
+      		
+      		newTile2.civId = civList.size()+1;
+      		newTile2.countyId = -1;
+      		newTile2.countyTileId = -1;
+
+      		newTile2.popLimit = 100;
+      		newCivList.add(newTile2);
+      		boardList[setlTi.xIndex][setlTi.yIndex] = newTile2;
       		// empty tile
       		// settle tile
       		//settleTile
       	}
     }
+    
+    
     
     /// common functions ///
     
@@ -389,54 +421,65 @@ public class MainBoardGui  extends JPanel {
     	
     	for(int row=-1; row<=1; row++) {
     		for (int col=-1; col<=1; col++ ){
-    			
-    			// checks if tile is within board
-    			if(tile.xIndex - 1 > 0 
-    				&& tile.yIndex - 1 > 0 
-    				&& tile.xIndex + 1 < boardTileWidth
-    				&& tile.yIndex + 1 < boardTileHeight) {
-    				
-    				// check if tile is a land tile
-    				if (tile instanceof LandTile) {
-    					// adds land tile to arrayList
-    					landTiles.add((LandTile)tile);
-    				}
+    			// checks if surrounding tile is not the original tile
+    			if (col !=0 || row != 0) {
+    				//TODO find out why next if statment is blocking more tiles then it should
     				
     				
-    			}
+    				//System.out.print("(" + col + ", " + row + ")");
+    				
+	    			// checks if surrounding tile is within board
+	    			if(tile.xIndex + col > 0 
+	    				&& tile.yIndex + row > 0 
+	    				&& tile.xIndex + col < boardTileWidth
+	    				&& tile.yIndex + row < boardTileHeight){
+	    				
+	    				
+	    				
+	    				Tile surndTile = boardList[tile.xIndex+col][tile.yIndex+row];
+	    				
+	    				// check if tile is a land tile
+	    				if (surndTile instanceof LandTile) {
+	    					// adds land tile to arrayList
+	    					landTiles.add((LandTile)surndTile);
+	    				}
+	    				
+	    				
+	    			}
 
+    			}
     		}
     	}
     	
     	
     	
-    	
+    	//System.out.println("Land Tiles:" + landTiles);
     	return landTiles;
     }
     
     public ArrayList<LandTile> getMovableToTiles(Tile fromTile,ArrayList<LandTile> landLst){
     	
-    	ArrayList<LandTile> surroundingLandTiles = new ArrayList<LandTile>();
     	// TODO  find movable to tiles
     	// TODO try sorting out tiles 
     
+    	ArrayList<LandTile> removeLst = new ArrayList<LandTile>();
     	
     	// remove all tiles that are in same civ
-    	for (LandTile surndTile : surroundingLandTiles) {
+    	for (LandTile surndTile : landLst) {
     		if (surndTile instanceof OccupiedTile) {
     			OccupiedTile occTile = (OccupiedTile) surndTile;
     			
     			//checks if surrounding tile is on the same team as expanding tile
     			if (occTile.civId == ((OccupiedTile)fromTile).civId) {
-    				surroundingLandTiles.remove(surndTile);
+    				removeLst.add(surndTile);
     			}
     			
     		}
     	}
     	
+    	landLst.removeAll(removeLst);
     	
-    
-    	return surroundingLandTiles;
+    	return landLst;
     }
     
     /*
